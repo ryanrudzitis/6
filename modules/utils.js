@@ -18,15 +18,5 @@ module.exports = {
         }
 
         return data;
-    },
-
-    getTotalRecordsPromise: (sqlQuery, mysqlConnection) => {
-        return new Promise((resolve, reject) => {
-            mysqlConnection.query(sqlQuery, (err, result) => {
-                if (err) reject(err);
-                resolve(result[0]['COUNT(*)']);
-            });
-        });
     }
-
 }

@@ -59,20 +59,23 @@ app.patch(`${endPointRoot}definition/:word`, (req, res) => {
         const responseData = {};
 
         const promise = new Promise((resolve, reject) => {
-            mysqlConnection.query(sqlUpdateEntry, [dataBody.definition, dataParams.word], (err) => {
+            mysqlConnection.query(sqlUpdateEntry, [dataBody.definition, dataParams.word], (err, result) => {
                 if (err) reject(err);
-                resolve()
+                resolve(result)
             });
         });
 
-        promise.then(() => {
+        promise.then((result) => {
+            if (result.affectedRows === 0) {
+                throw new Error('Entry not found');
+            }
             responseData.message = 'Entry updated successfully';
             responseData.entry = { word: dataParams.word, definition: dataBody.definition };
             res.status(200);
         }).catch(err => {
-            responseData.message = err.sqlMessage;
+            responseData.message = err.sqlMessage ?? err.message;
             responseData.entry = { word: dataParams.word ?? '', definition: dataBody.definition ?? '' };
-            res.status(400);
+            res.status(404);
         }).finally(() => {
             mysqlConnection.query(sqlSelectCountEntry, (err, result) => {
                 if (err) throw err;
