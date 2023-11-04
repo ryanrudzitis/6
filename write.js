@@ -1,5 +1,8 @@
 const addWordBtn = document.querySelector("#addWordBtn");
+const updateWordBtn = document.querySelector("#updateWordBtn");
+const cancelBtn = document.querySelector("#cancelBtn");
 const endPointRoot = "https://nsinghsidhu12.com/COMP4537/labs/6/api/v1/";
+let userData;
 
 /**
  * Gets the list of languages from the server and populates the select elements
@@ -46,6 +49,7 @@ addWordBtn.addEventListener("click", async () => {
   const resultLabel = document.querySelector("#resultLabel");
   const errorLabel = document.querySelector("#errorLabel");
   const enterWord = "Please enter a word and definition";
+  const update = "Word already exists, would you like to update the definition?";
   let response;
   let wordExists;
 
@@ -84,10 +88,22 @@ addWordBtn.addEventListener("click", async () => {
     });
 
   if (wordExists) {
-    patchWord(userData);
+    resultLabel.innerHTML = update;
+    updateWordBtn.style.display = "block";
+    cancelBtn.style.display = "block";
   } else {
     postWord(userData);
   }
+});
+
+updateWordBtn.addEventListener("click", () => {
+  patchWord(userData);
+});
+
+cancelBtn.addEventListener("click", () => {
+  updateWordBtn.style.display = "none";
+  cancelBtn.style.display = "none";
+  resultLabel.innerHTML = "";
 });
 
 function postWord(data) {
@@ -144,6 +160,8 @@ function patchWord(data) {
     .then((data) => {
       resultLabel.innerHTML = data.message;
       numEntriesLabel.innerHTML = totalEntriesString + data.total;
+      updateWordBtn.style.display = "none";
+      cancelBtn.style.display = "none";
     })
     .catch((err) => {
       resultLabel.innerHTML = "";
