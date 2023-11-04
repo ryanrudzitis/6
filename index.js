@@ -12,6 +12,7 @@ const sqlInsertEntry = 'INSERT INTO entry (word, definition, word_language, defi
 const sqlSelectEntry = 'SELECT * FROM entry WHERE word = ?';
 const sqlUpdateEntry = 'UPDATE entry SET definition = ? WHERE word = ?';
 const sqlSelectCountEntry = 'SELECT COUNT(*) FROM entry';
+const sqlDeleteEntry = 'DELETE FROM entry WHERE word = ?';
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -121,6 +122,42 @@ app.post(`${endPointRoot}definition`, (req, res) => {
         });
     });
 });
+
+app.delete(`${endPointRoot}definition/:word`, (req, res) => {
+    const data = utils.sanitizeInput(req.params, mysqlConnection);
+    const responseData = {};
+
+    const promise = new Promise((resolve, reject) => {
+        // Attempt to delete the entry
+        mysqlConnection.query(sqlDeleteEntry, [data.word], (err, result) => {
+            if (err) reject(err);
+            resolve(result);
+        });
+    });
+
+    promise.then((result) => {
+        if (result.affectedRows === 0) {
+            // Entry not found, respond with an appropriate message
+            responseData.message = 'Entry not found';
+            responseData.entry = { word: data.word };
+            res.status(404);
+        } else {
+            // Entry deleted successfully
+            responseData.message = 'Entry deleted successfully';
+            responseData.entry = { word: data.word };
+            res.status(200);
+        }
+    }).catch(err => {
+        // Handle any errors, such as database errors
+        responseData.message = err.sqlMessage ?? err.message;
+        responseData.entry = { word: data.word ?? '' };
+        res.status(500); // Use an appropriate HTTP status code for database errors
+    }).finally(() => {
+        // Return the response
+        res.end(JSON.stringify({ message: responseData.message, entry: responseData.entry }));
+    });
+});
+
 
 app.listen(port, (err) => {
     if (err) throw err;
