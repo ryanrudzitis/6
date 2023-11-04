@@ -1,5 +1,5 @@
 const express = require('express');
-const utils = require('./modules/utils');
+const utils = require('../modules/utils');
 
 const app = express();
 const port = 6001;
