@@ -3,6 +3,7 @@ const deleteBtn = document.querySelector("#deleteBtn");
 const textArea = document.querySelector("#userWord");
 const resultLabel = document.querySelector("#resultLabel");
 const errorLabel = document.querySelector("#errorLabel");
+const numEntriesLabel = document.querySelector("#numEntriesLabel");
 const endPointRoot = "https://nsinghsidhu12.com/COMP4537/labs/6/api/v1/";
 
 searchBtn.addEventListener("click", () => {
@@ -21,6 +22,8 @@ searchBtn.addEventListener("click", () => {
 
   errorLabel.textContent = "";
   deleteBtn.style.display = "none";
+  numEntriesLabel.innerHTML = "";
+
 
   fetch(`${endPointRoot}definition/${userWord}`)
     .then((res) => {
@@ -46,6 +49,7 @@ searchBtn.addEventListener("click", () => {
 });
 
 deleteBtn.addEventListener("click", () => {
+  const totalEntriesString = "Total entries: ";
   const userWord = textArea.value;
 
   fetch(`${endPointRoot}definition/${userWord}`, {
@@ -60,6 +64,7 @@ deleteBtn.addEventListener("click", () => {
     .then((data) => {
       resultLabel.innerHTML = data.message;
       deleteBtn.style.display = "none";
+      numEntriesLabel.innerHTML = totalEntriesString + data.total;
     })
     .catch(() => {
       resultLabel.innerHTML = "";
