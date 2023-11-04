@@ -13,6 +13,11 @@ const sqlSelectEntry = 'SELECT * FROM entry WHERE word = ?';
 const sqlUpdateEntry = 'UPDATE entry SET definition = ? WHERE word = ?';
 const sqlSelectCountEntry = 'SELECT COUNT(*) FROM entry';
 const sqlDeleteEntry = 'DELETE FROM entry WHERE word = ?';
+const notFoundEntry = 'Entry not found';
+const foundEntry = 'Entry found successfully';
+const updateEntry = 'Entry updated successfully';
+const addEntry = 'Entry added successfully';
+const deleteEntry = 'Entry deleted successfully';
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -36,12 +41,12 @@ app.get(`${endPointRoot}definition/:word`, (req, res) => {
         if (err) throw err;
 
         if (result.length === 0) {
-            res.status(404).end(JSON.stringify({ message: 'Entry not found', entry: { word: data.word } }));
+            res.status(404).end(JSON.stringify({ message: notFoundEntry, entry: { word: data.word } }));
             return;
         }
 
         delete result[0].id;
-        res.status(200).end(JSON.stringify({ message: 'Entry found successfully', entry: result[0] }));
+        res.status(200).end(JSON.stringify({ message: foundEntry, entry: result[0] }));
     });
 });
 
@@ -68,9 +73,9 @@ app.patch(`${endPointRoot}definition/:word`, (req, res) => {
 
         promise.then((result) => {
             if (result.affectedRows === 0) {
-                throw new Error('Entry not found');
+                throw new Error(notFoundEntry);
             }
-            responseData.message = 'Entry updated successfully';
+            responseData.message = updateEntry;
             responseData.entry = { word: dataParams.word, definition: dataBody.definition };
             res.status(200);
         }).catch(err => {
@@ -107,7 +112,7 @@ app.post(`${endPointRoot}definition`, (req, res) => {
         });
 
         promise.then(() => {
-            responseData.message = 'Entry added successfully';
+            responseData.message = addEntry;
             responseData.entry = { word: data.word, definition: data.definition, wordLang: data.wordLang, definitionLang: data.definitionLang };
             res.status(201);
         }).catch(err => {
@@ -138,12 +143,12 @@ app.delete(`${endPointRoot}definition/:word`, (req, res) => {
     promise.then((result) => {
         if (result.affectedRows === 0) {
             // Entry not found, respond with an appropriate message
-            responseData.message = 'Entry not found';
+            responseData.message = notFoundEntry;
             responseData.entry = { word: data.word };
             res.status(404);
         } else {
             // Entry deleted successfully
-            responseData.message = 'Entry deleted successfully';
+            responseData.message = deleteEntry;
             responseData.entry = { word: data.word };
             res.status(200);
         }
@@ -154,7 +159,10 @@ app.delete(`${endPointRoot}definition/:word`, (req, res) => {
         res.status(500); // Use an appropriate HTTP status code for database errors
     }).finally(() => {
         // Return the response
-        res.end(JSON.stringify({ message: responseData.message, entry: responseData.entry }));
+        mysqlConnection.query(sqlSelectCountEntry, (err, result) => {
+            if (err) throw err;
+            res.end(JSON.stringify({ message: responseData.message, entry: responseData.entry, total: result[0]['COUNT(*)'] }));
+        });
     });
 });
 
