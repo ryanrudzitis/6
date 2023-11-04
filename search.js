@@ -1,24 +1,28 @@
 const searchBtn = document.querySelector("#searchBtn");
+const deleteBtn = document.querySelector("#deleteBtn");
+const textArea = document.querySelector("#userWord");
+const resultLabel = document.querySelector("#resultLabel");
+const errorLabel = document.querySelector("#errorLabel");
+const endPointRoot = "https://nsinghsidhu12.com/COMP4537/labs/6/api/v1/";
 
 searchBtn.addEventListener("click", () => {
-  const textArea = document.querySelector("#userWord");
-  const resultLabel = document.querySelector("#resultLabel");
-  const errorLabel = document.querySelector("#errorLabel");
   const userWord = textArea.value;
-  const serverPort = 6001;
-  const endPointRoot = "/COMP4537/labs/6/api/v1/";
+  const enterWord = "Please enter a word";
+  const definition = "Definition: ";
+  const wordLanguage = "Word Language: ";
+  const definitionLanguage = "Definition Language: ";
   let response;
 
   if (userWord === "") {
     resultLabel.innerHTML = "";
-    errorLabel.textContent = "Please enter a word";
+    errorLabel.textContent = enterWord;
     return;
   }
 
   errorLabel.textContent = "";
-  resultLabel.textContent = "Searching...";
+  deleteBtn.style.display = "none";
 
-  fetch(`http://localhost:${serverPort}${endPointRoot}definition/${userWord}`)
+  fetch(`${endPointRoot}definition/${userWord}`)
     .then((res) => {
       response = res;
       if (!res.ok) {
@@ -27,18 +31,39 @@ searchBtn.addEventListener("click", () => {
       return res.json();
     })
     .then((data) => {
-      console.log(data);
-      console.log("got here");
       resultLabel.innerHTML = data.message;
-      resultLabel.innerHTML += `<br><br>Definition: ${data.entry.definition}`;
-      resultLabel.innerHTML += `<br>Word Language: ${data.entry.word_language}`;
-      resultLabel.innerHTML += `<br>Definition Language: ${data.entry.definition_language}`;
+      resultLabel.innerHTML += `<br><br>${definition} ${data.entry.definition}`;
+      resultLabel.innerHTML += `<br>${wordLanguage} ${data.entry.word_language}`;
+      resultLabel.innerHTML += `<br>${definitionLanguage} ${data.entry.definition_language}`;
+      deleteBtn.style.display = "block";
     })
-    .catch((err) => {
+    .catch(() => {
       resultLabel.innerHTML = "";
       response.json().then((data) => {
-        console.error();
-        console.log(data);
+        errorLabel.innerHTML = data.message;
+      });
+    });
+});
+
+deleteBtn.addEventListener("click", () => {
+  const userWord = textArea.value;
+
+  fetch(`${endPointRoot}definition/${userWord}`, {
+    method: "DELETE",
+  })
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error();
+      }
+      return res.json();
+    })
+    .then((data) => {
+      resultLabel.innerHTML = data.message;
+      deleteBtn.style.display = "none";
+    })
+    .catch(() => {
+      resultLabel.innerHTML = "";
+      response.json().then((data) => {
         errorLabel.innerHTML = data.message;
       });
     });

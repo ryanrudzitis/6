@@ -1,20 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script defer src="write.js"></script>
-  <title>write</title>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script defer src="write.js"></script>
+    <title>write</title>
+  </head>
+  <body>
+    <div>
+      <label for="userWord">Enter a word:</label>
+      <br />
+      <textarea id="userWord" cols="20" rows="3"></textarea>
+      <select name="wordLanguage" id="wordLanguage"></select>
+      <br />
+      <br />
 
-  <div>
-    <textarea id="userWord" cols="50" rows="5"></textarea>
-    <br>
-    <button id="addWordBtn">Add word</button>
-    <p id="resultLabel"></p>
-    <p id="errorLabel"></p>
-  </div>
-  
-</body>
+      <label for="userDefinition">Enter the definition:</label>
+      <br />
+      <textarea id="userDefinition" cols="50" rows="5"></textarea>
+      <select name="definitionLanguage" id="definitionLanguage"></select>
+      <br />
+
+      <button id="addWordBtn">Add word</button>
+      <p id="resultLabel"></p>
+      <p id="errorLabel"></p>
+      <p id="numEntriesLabel"></p>
+    </div>
+  </body>
 </html>

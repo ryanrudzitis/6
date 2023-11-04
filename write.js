@@ -1,31 +1,155 @@
 const addWordBtn = document.querySelector("#addWordBtn");
+const endPointRoot = "https://nsinghsidhu12.com/COMP4537/labs/6/api/v1/";
 
-// add event listener for when the page loads
+/**
+ * Gets the list of languages from the server and populates the select elements
+ */
 async function getLanguages() {
   let languages = [];
 
-  
-}
+  const response = await fetch(`${endPointRoot}languages`);
 
-addWordBtn.addEventListener("click", () => {
-  const textArea = document.querySelector("#userWord");
-  const resultLabel = document.querySelector("#resultLabel");
-  const errorLabel = document.querySelector("#errorLabel");
-  const userWord = textArea.value;
-  const serverPort = 6001;
-  const endPointRoot = "/COMP4537/labs/6/api/v1/";
-  let response;
-
-  if (userWord === "") {
-    resultLabel.innerHTML = "";
-    errorLabel.textContent = "Please enter a word";
-    return;
+  if (!response.ok) {
+    throw new Error();
   }
 
-  errorLabel.textContent = "";
-  resultLabel.textContent = "Searching...";
+  const data = await response.json();
+  data.forEach((language) => {
+    languages.push(language.name);
+  });
 
-  // post the word to the server
-  fetch(`http://localhost:${serverPort}${endPointRoot}definition/${userWord}`)
-    
+  return languages;
+}
+
+/**
+ * On page load, populate the select elements with the list of languages
+ */
+window.addEventListener("load", async () => {
+  const languages = await getLanguages();
+  const selectWordLanguage = document.querySelector("#wordLanguage");
+  const selectDefinitionLanguage = document.querySelector(
+    "#definitionLanguage"
+  );
+
+  languages.forEach((language) => {
+    const option = document.createElement("option");
+    option.value = language;
+    option.text = language;
+    selectWordLanguage.appendChild(option);
+    selectDefinitionLanguage.appendChild(option.cloneNode(true));
+  });
 });
+
+addWordBtn.addEventListener("click", async () => {
+  const wordTextArea = document.querySelector("#userWord");
+  const definitionTextArea = document.querySelector("#userDefinition");
+  const resultLabel = document.querySelector("#resultLabel");
+  const errorLabel = document.querySelector("#errorLabel");
+  const enterWord = "Please enter a word and definition";
+  let response;
+  let wordExists;
+
+  const userWord = wordTextArea.value;
+  const userDefinition = definitionTextArea.value;
+
+  if (userWord === "" || userDefinition === "") {
+    resultLabel.innerHTML = "";
+    errorLabel.textContent = enterWord;
+    return;
+  }
+  errorLabel.textContent = "";
+
+  // create the body of the request
+  userData = {
+    word: userWord,
+    definition: userDefinition,
+    wordLang: document.querySelector("#wordLanguage").value,
+    definitionLang: document.querySelector("#definitionLanguage").value,
+  };
+
+  // do a get request to see if the word already exists
+  await fetch(`${endPointRoot}definition/${userWord}`)
+    .then((res) => {
+      response = res;
+      if (!res.ok) {
+        throw new Error();
+      }
+      return res.json();
+    })
+    .then(() => {
+      wordExists = true;
+    })
+    .catch(() => {
+      wordExists = false;
+    });
+
+  if (wordExists) {
+    patchWord(userData);
+  } else {
+    postWord(userData);
+  }
+});
+
+function postWord(data) {
+  const numEntriesLabel = document.querySelector("#numEntriesLabel");
+  const totalEntriesString = "Total entries: ";
+
+  fetch(`${endPointRoot}definition`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    // get the response
+    .then((res) => {
+      response = res;
+      if (!res.ok) {
+        throw new Error();
+      }
+      return res.json();
+    })
+    .then((data) => {
+      console.log(data);
+      resultLabel.innerHTML = data.message;
+      numEntriesLabel.innerHTML = totalEntriesString + data.total;
+    })
+    .catch((err) => {
+      resultLabel.innerHTML = "";
+      response.json().then((data) => {
+        errorLabel.innerHTML = data.message;
+        numEntriesLabel.innerHTML = totalEntriesString + data.total;
+      });
+    });
+}
+
+function patchWord(data) {
+  const numEntriesLabel = document.querySelector("#numEntriesLabel");
+  const totalEntriesString = "Total entries: ";
+
+  fetch(`${endPointRoot}definition/${data.word}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    .then((res) => {
+      response = res;
+      if (!res.ok) {
+        throw new Error();
+      }
+      return res.json();
+    })
+    .then((data) => {
+      resultLabel.innerHTML = data.message;
+      numEntriesLabel.innerHTML = totalEntriesString + data.total;
+    })
+    .catch((err) => {
+      resultLabel.innerHTML = "";
+      response.json().then((data) => {
+        errorLabel.innerHTML = data.message;
+        numEntriesLabel.innerHTML = totalEntriesString + data.total;
+      });
+    });
+}
